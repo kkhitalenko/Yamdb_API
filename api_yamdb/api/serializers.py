@@ -1,7 +1,10 @@
-from reviews.models import (
-    Category, Genres, Title, Review
-)
+from django.forms import ValidationError
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
+
+from reviews.models import (
+    Category, Genres, Title, Review, Comment
+)
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -37,8 +40,46 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Validates Review model."""
+    """Сериализатор для отзывов."""
+    title = serializers.SlugRelatedField(
+        slug_field='name',
+        read_only=True
+    )
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
         model = Review
+
+    def validate(self, data):
+        request = self.context['request']
+        author = request.user
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = get_object_or_404(Title, pk=title_id)
+        if (
+            request.method == 'POST'
+            and Review.objects.filter(title=title, author=author).exists()
+        ):
+            raise ValidationError(
+                'Пользователь может оставить только один отзыв!'
+            )
+        return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для комментариев."""
+    review = serializers.SlugRelatedField(
+        slug_field='text',
+        read_only=True
+    )
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'pub_date', 'review')
+        model = Comment

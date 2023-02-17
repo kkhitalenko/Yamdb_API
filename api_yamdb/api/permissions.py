@@ -1,7 +1,14 @@
 from rest_framework import permissions
 
 
-class ReviewPermission(permissions.BasePermission):
+class ReviewCommentPermission(permissions.BasePermission):
+    """
+    Checking permissions to create and edit records for:
+    - user;
+    - moderator;
+    - admin.
+    """
+
     def has_permission(self, request, view):
         return (request.method in permissions.SAFE_METHODS
                 or request.user.is_authenticated)

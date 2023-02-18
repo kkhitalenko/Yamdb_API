@@ -8,7 +8,7 @@ from rest_framework import viewsets
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
-from .permissions import ReviewCommentPermission
+from api.permissions import ReviewCommentPermission
 
 
 class TitleViewSet(ModelViewSet):

@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from django.forms import ValidationError
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
@@ -28,6 +29,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer(read_only=True)
     genre = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         fields = '__all__'
@@ -38,9 +40,18 @@ class TitleSerializer(serializers.ModelSerializer):
         serializer = GenresSerializer(genre_query, many=True)
         return serializer.data
 
+    def get_title_rating(self, obj):
+        reviews = Review.objects.filter(title=obj)
+        if reviews.exists():
+            rating = reviews.aggregate(Avg('score'))['score__avg']
+            return int(round(rating))
+        else:
+            return 1
+
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Сериализатор для отзывов."""
+    """Validates Review model."""
+
     title = serializers.SlugRelatedField(
         slug_field='name',
         read_only=True
@@ -70,7 +81,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Сериализатор для комментариев."""
+    """Validates Comment model."""
+
     review = serializers.SlugRelatedField(
         slug_field='text',
         read_only=True

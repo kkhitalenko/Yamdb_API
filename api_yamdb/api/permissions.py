@@ -10,8 +10,10 @@ class ReviewCommentPermission(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        return (request.method in permissions.SAFE_METHODS
-                or request.user.is_authenticated)
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated
+        )
 
     def has_object_permission(self, request, view, obj):
         return (
@@ -20,3 +22,26 @@ class ReviewCommentPermission(permissions.BasePermission):
             or request.user.is_moderator
             or request.user.is_admin
         )
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """Checking user is admin."""
+
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            if request.user.is_admin or request.user.is_superuser:
+                return True
+
+        return request.method in permissions.SAFE_METHODS
+
+    def has_object_permission(self, request, view):
+        if request.user.is_authenticated:
+            if request.user.is_admin or request.user.is_superuser:
+                return True
+
+
+class ReadOnly(permissions.BasePermission):
+    """Checking user is allowed to read only."""
+
+    def has_permission(self, request, view):
+        return request.method in permissions.SAFE_METHODS

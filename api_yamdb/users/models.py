@@ -14,8 +14,9 @@ class User(AbstractUser):
     first_name = models.CharField('Имя', max_length=150, blank=True)
     last_name = models.CharField('Фамилия', max_length=150, blank=True)
     bio = models.TextField('Биография', blank=True)
-    role = models.CharField('Роль', max_length=10, choices=ROLES,
-                            default='user', blank=True)
+    role = models.CharField(
+        'Роль', max_length=10, choices=ROLES, default='user', blank=True
+    )
 
     class Meta:
         ordering = ('id',)

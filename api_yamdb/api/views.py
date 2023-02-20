@@ -1,29 +1,25 @@
-from django.shortcuts import get_object_or_404
+from api.permissions import IsAdmin, IsAdminOrReadOnly, ReviewCommentPermission
 from api.serializers import (
-    CategorySerializer, GenresSerializer, TitleSerializer,
-    ReviewSerializer, CommentSerializer, TitleCreationSerializer
+    CategorySerializer, CheckConfCodeSerializer,
+    CommentSerializer, GenresSerializer,
+    ReviewSerializer, SignupSerializer,
+    TitleCreationSerializer, TitleSerializer,
+    UserSerializer
 )
-from reviews.models import Title, Category, Genres, Review
-from rest_framework import viewsets, filters, mixins
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from rest_framework.pagination import PageNumberPagination
-from django_filters.rest_framework import DjangoFilterBackend
-from api.permissions import ReviewCommentPermission, IsAdminOrReadOnly
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-
-from rest_framework import filters, permissions, status, viewsets
-from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.generics import CreateAPIView
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from api.serializers import (
-    CheckConfCodeSerializer, SignupSerializer, UserSerializer
-)
-from api.permissions import IsAdmin
-from api_yamdb.settings import DEFAULT_EMAIL
+from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from reviews.models import Category, Genres, Review, Title
 from users.models import User
+
+from api_yamdb.settings import DEFAULT_EMAIL
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -92,8 +88,8 @@ class GetTokenView(CreateAPIView):
                 return Response('Успешно', status.HTTP_200_OK,)
             return Response('Неверный код', status.HTTP_400_BAD_REQUEST,)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
-        
-        
+
+
 class TitleViewSet(ModelViewSet):
     """Title ViewSet."""
 
@@ -107,7 +103,7 @@ class TitleViewSet(ModelViewSet):
         if self.action in ['create', 'update', 'partial_update']:
             return TitleCreationSerializer
         return self.serializer_class
-    
+
 
 class CategoryViewSet(
     mixins.CreateModelMixin,

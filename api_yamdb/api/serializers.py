@@ -2,12 +2,9 @@ from django.db.models import Avg
 from django.forms import ValidationError
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
-from users.models import User
-
-from reviews.models import (
-    Category, Genres, Title, Review, Comment
-)
 from rest_framework.validators import UniqueValidator
+from reviews.models import Category, Comment, Genres, Review, Title
+from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -32,8 +29,9 @@ class SignupSerializer(serializers.ModelSerializer):
         if User.objects.filter(email=data['email']).exists:
             raise serializers.ValidationError(
                 'Почта уже зарегистрирована'
-                
- 
+            )
+
+
 class CategorySerializer(serializers.ModelSerializer):
     """Validates Category model."""
 

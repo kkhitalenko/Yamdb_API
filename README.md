@@ -53,6 +53,12 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+Загрузить имеющуюся базу данных для работы проекта:
+
+```
+python manage.py import_csv
+```
+
 Документация проекта находится по адресу (при запуске на локальном сервере):
 
 ```

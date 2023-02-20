@@ -1,14 +1,15 @@
+from datetime import datetime
+
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from users.models import User
-from django.core.validators import MaxValueValidator, MinValueValidator
-from datetime import datetime
 
 
 class CategoryGenres(models.Model):
     """Abstract model for genres and categories."""
 
     name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    slug = models.SlugField(max_length=50)
 
     def __str__(self):
         return self.name
@@ -41,24 +42,22 @@ class Title(models.Model):
     year = models.IntegerField(
         validators=[MaxValueValidator(datetime.now().year)]
     )
-    score = models.FloatField(
+    rating = models.FloatField(
         validators=[
             MaxValueValidator(10),
             MinValueValidator(1)
         ],
-        default=1.0
+        null=True,
+        blank=True
     )
     description = models.TextField(max_length=256, null=True, blank=True)
     genre = models.ManyToManyField(
         Genres,
-        related_name='genre',
-        blank=True,
+        through='GenreTitle'
     )
     category = models.ForeignKey(
         Category,
         related_name='category',
-        blank=True,
-        null=True,
         on_delete=models.CASCADE
     )
 
@@ -68,10 +67,6 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
-
-    @property
-    def title_rating(self):
-        return None   # Доделать
 
 
 class Review(models.Model):
@@ -145,3 +140,13 @@ class Comment(models.Model):
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
         ordering = ['-pub_date']
+
+
+class GenreTitle(models.Model):
+    """ORM model for genre-title relaton."""
+
+    title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre_id = models.ForeignKey(Genres, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.genre_id} {self.title_id}'

@@ -43,7 +43,7 @@ class CategorySerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ['name', 'slug']
+        fields = ['id', 'name', 'slug']
         model = Category
         lookup_field = 'slug'
 

@@ -47,7 +47,8 @@ class Title(models.Model):
             MaxValueValidator(10),
             MinValueValidator(1)
         ],
-        null=True
+        null=True,
+        blank=True
     )
     description = models.TextField(max_length=256, null=True, blank=True)
     genre = models.ManyToManyField(
@@ -144,8 +145,8 @@ class Comment(models.Model):
 class GenreTitle(models.Model):
     """ORM model for genre-title relaton."""
 
-    genre = models.ForeignKey(Genres, on_delete=models.CASCADE)
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    title_id = models.ForeignKey(Title, on_delete=models.CASCADE)
+    genre_id = models.ForeignKey(Genres, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.genre} {self.title}'
+        return f'{self.genre_id} {self.title_id}'

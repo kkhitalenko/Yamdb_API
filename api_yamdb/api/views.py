@@ -62,18 +62,9 @@ class SignupView(CreateAPIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        if User.objects.filter(username=request.user.username, email=request.data.get('email'),).exists():
-            user, created = User.objects.get_or_create(username=request.data.get('username'))
-            if created is False:
-                conf_code = default_token_generator.make_token(user)
-                user.conf_code = conf_code
-                user.save()
-                return Response('Токен обновлен',)
         if serializer.is_valid():
-            serializer.save()
-            user = User.objects.get(username=request.data['username'], email=request.data['email'])
+            user = serializer.save()
             conf_code = default_token_generator.make_token(user)
-            user.conf_code = conf_code
             send_mail(
                 subject='Код подтверждения',
                 message=f'confirmation_code:{conf_code}',
@@ -82,22 +73,30 @@ class SignupView(CreateAPIView):
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-
-        # if serializer.is_valid():
-        #     user = serializer.save()
-        #     conf_code = default_token_generator.make_token(user)
-        #     send_mail(
-        #         subject='Код подтверждения',
-        #         message=f'confirmation_code:{conf_code}',
-        #         from_email=DEFAULT_EMAIL,
-        #         recipient_list=[user.email, ],
-        #     )
-        #     return Response(serializer.data, status=status.HTTP_200_OK)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # class ...(TokenObtainPairView):
+
+    #     if User.objects.filter(username=request.user.username, email=request.data.get('email'),).exists():
+    #         user, created = User.objects.get_or_create(username=request.data.get('username'))
+    #         if created is False:
+    #             conf_code = default_token_generator.make_token(user)
+    #             user.conf_code = conf_code
+    #             user.save()
+    #             return Response('Токен обновлен',)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         user = User.objects.get(username=request.data['username'], email=request.data['email'])
+    #         conf_code = default_token_generator.make_token(user)
+    #         user.conf_code = conf_code
+    #         send_mail(
+    #             subject='Код подтверждения',
+    #             message=f'confirmation_code:{conf_code}',
+    #             from_email=DEFAULT_EMAIL,
+    #             recipient_list=[user.email, ],
+    #         )
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetTokenView(CreateAPIView):

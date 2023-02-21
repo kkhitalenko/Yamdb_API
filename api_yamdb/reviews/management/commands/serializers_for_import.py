@@ -1,5 +1,5 @@
 from reviews.models import (
-    Title, GenreTitle, Review, User, Category, Genres
+    Title, GenreTitle, Review, User, Category, Genres, Comment
 )
 from rest_framework.validators import UniqueValidator
 from rest_framework import serializers
@@ -53,6 +53,8 @@ class GenreTitleCmdSerializer(serializers.ModelSerializer):
 
 class UserCmdSerializer(serializers.ModelSerializer):
 
+    id = serializers.IntegerField()
+
     class Meta:
         fields = ['id', 'username', 'email', 'role']
         model = User
@@ -60,8 +62,13 @@ class UserCmdSerializer(serializers.ModelSerializer):
 
 class ReviewCmdSerializer(serializers.ModelSerializer):
 
-    title = serializers.CharField(source='title_id')
-
     class Meta:
         fields = ['id', 'title', 'text', 'author', 'score', 'pub_date']
         model = Review
+
+
+class CommentCmdSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ['id', 'review', 'text', 'author', 'pub_date']
+        model = Comment

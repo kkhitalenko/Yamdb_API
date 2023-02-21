@@ -121,11 +121,20 @@ class GetTokenView(CreateAPIView):
 class TitleViewSet(ModelViewSet):
     """Title ViewSet."""
 
-    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year',)
+    filterset_fields = ('category__slug', 'genre__slug', 'year', 'name')
     permission_classes = [IsAdminOrReadOnly]
+
+    def get_queryset(self):
+        queryset = Title.objects.all()
+        genre = self.request.query_params.get('genre')
+        if genre is not None:
+            queryset = queryset.filter(genre__slug=genre)
+        category = self.request.query_params.get('category')
+        if category is not None:
+            queryset = queryset.filter(category__slug=category)
+        return queryset
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -141,10 +150,10 @@ class CategoryViewSet(
 ):
     """Category ViewSet."""
 
-    queryset = Category.objects.all()
+    queryset = Category.objects.all().order_by('-name')
     serializer_class = CategorySerializer
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('name')
+    search_fields = ('name', 'slug')
     lookup_field = 'slug'
     permission_classes = [IsAdminOrReadOnly]
 
@@ -152,7 +161,7 @@ class CategoryViewSet(
 class GenresViewSet(CategoryViewSet):
     """Genres ViewSet."""
 
-    queryset = Genres.objects.all()
+    queryset = Genres.objects.all().order_by('-name')
     serializer_class = GenresSerializer
 
 

@@ -1,13 +1,18 @@
 from django.db.models import Avg
 from django.forms import ValidationError
+import re
+
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
 from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Comment, Genres, Review, Title
 from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Validates User model."""
+
     class Meta:
         fields = (
             'username', 'email', 'first_name', 'last_name', 'bio', 'role',
@@ -16,20 +21,18 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SignupSerializer(serializers.ModelSerializer):
-    # email = serializers.EmailField(required=True)
+    """Validates Signup proccess."""
+
     class Meta:
-        fields = ('username', 'email',)
         model = User
+        fields = ('email', 'username', )
 
     def validate(self, data):
         if data['username'] == 'me':
             raise serializers.ValidationError(
                 'Регистрация пользователя с именем "me" невозможна'
             )
-        if User.objects.filter(email=data['email']).exists:
-            raise serializers.ValidationError(
-                'Почта уже зарегистрирована'
-            )
+        return data
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -141,11 +144,13 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CheckConfCodeSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
+    """Validates the proccess of getting Confirmation Code."""
+
+    username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
 
     class Meta:
-        fields = ('email', 'confirmation_code',)
+        fields = ('username', 'confirmation_code',)
         model = User
 
 

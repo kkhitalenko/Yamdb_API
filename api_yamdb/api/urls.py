@@ -1,12 +1,11 @@
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
+
 from api.views import (
     CategoryViewSet, CommentViewSet, GenresViewSet,
     GetTokenView, ReviewViewSet, SignupView, TitleViewSet,
     UserPersonalPageView, UserViewSet
 )
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
-
-app_name = 'api'
 
 v1_router = DefaultRouter()
 v1_router.register('titles', TitleViewSet, basename='titles')
@@ -22,7 +21,7 @@ v1_router.register(
     CommentViewSet,
     basename='comments'
 )
-v1_router.register(r'users', UserViewSet)
+v1_router.register(r'users', UserViewSet, basename='users')
 
 urlpatterns = [
     path('v1/users/me/', UserPersonalPageView.as_view()),

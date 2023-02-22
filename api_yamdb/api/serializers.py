@@ -1,3 +1,4 @@
+import re
 from django.db.models import Avg
 from django.forms import ValidationError
 
@@ -19,17 +20,21 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
 
-class SignupSerializer(serializers.ModelSerializer):
+class SignupSerializer(serializers.Serializer):
     """Validates Signup proccess."""
 
-    class Meta:
-        model = User
-        fields = ('email', 'username', )
+    email = serializers.CharField(max_length=254, required=True)
+    username = serializers.CharField(max_length=150, required=True)
 
     def validate(self, data):
         if data['username'] == 'me':
             raise serializers.ValidationError(
                 'Регистрация пользователя с именем "me" невозможна'
+            )
+        reg = re.compile(r'^[\w.@+-]+')
+        if not reg.match(data['username']):
+            raise serializers.ValidationError(
+                'Вы используете недопустимые символы'
             )
         return data
 

@@ -56,7 +56,7 @@ class UserPersonalPageView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
 
 
-class SignupView(CreateAPIView):
+class SignupView(APIView):
     """Signup View."""
 
     permission_classes = [permissions.AllowAny, ]
@@ -65,13 +65,13 @@ class SignupView(CreateAPIView):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
             user, _ = User.objects.get_or_create(
-                username=serializer.validated_data.get('username'),
-                email=serializer.validated_data.get('email')
+                username=serializer.validated_data['username'],
+                email=serializer.validated_data['email']
             )
             confirmation_code = default_token_generator.make_token(user)
             send_mail(
                 subject='Код подтверждения',
-                message=f'confirmation code:{confirmation_code}',
+                message=f'confirmation code: {confirmation_code}',
                 from_email=DEFAULT_EMAIL,
                 recipient_list=[user.email, ],
             )

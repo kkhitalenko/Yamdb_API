@@ -1,6 +1,5 @@
 from django.db.models import Avg
 from django.forms import ValidationError
-import re
 
 from rest_framework import serializers
 from rest_framework.generics import get_object_or_404
@@ -143,15 +142,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
 
-class CheckConfCodeSerializer(serializers.ModelSerializer):
+class CheckConfCodeSerializer(serializers.Serializer):
     """Validates the proccess of getting Confirmation Code."""
 
     username = serializers.CharField(required=True)
     confirmation_code = serializers.CharField(required=True)
-
-    class Meta:
-        fields = ('username', 'confirmation_code',)
-        model = User
 
 
 class CommentSerializer(serializers.ModelSerializer):

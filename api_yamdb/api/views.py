@@ -9,7 +9,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-# from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from api.permissions import IsAdmin, IsAdminOrReadOnly, ReviewCommentPermission
 from api.serializers import (
@@ -63,11 +64,14 @@ class SignupView(CreateAPIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            conf_code = default_token_generator.make_token(user)
+            user, _ = User.objects.get_or_create(
+                username=serializer.validated_data.get('username'),
+                email=serializer.validated_data.get('email')
+            )
+            confirmation_code = default_token_generator.make_token(user)
             send_mail(
                 subject='Код подтверждения',
-                message=f'confirmation_code:{conf_code}',
+                message=f'confirmation code:{confirmation_code}',
                 from_email=DEFAULT_EMAIL,
                 recipient_list=[user.email, ],
             )
@@ -75,31 +79,7 @@ class SignupView(CreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class ...(TokenObtainPairView):
-
-    #     if User.objects.filter(username=request.user.username, email=request.data.get('email'),).exists():
-    #         user, created = User.objects.get_or_create(username=request.data.get('username'))
-    #         if created is False:
-    #             conf_code = default_token_generator.make_token(user)
-    #             user.conf_code = conf_code
-    #             user.save()
-    #             return Response('Токен обновлен',)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         user = User.objects.get(username=request.data['username'], email=request.data['email'])
-    #         conf_code = default_token_generator.make_token(user)
-    #         user.conf_code = conf_code
-    #         send_mail(
-    #             subject='Код подтверждения',
-    #             message=f'confirmation_code:{conf_code}',
-    #             from_email=DEFAULT_EMAIL,
-    #             recipient_list=[user.email, ],
-    #         )
-    #         return Response(serializer.data, status=status.HTTP_200_OK)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class GetTokenView(CreateAPIView):
+class GetTokenView(TokenObtainPairView):
     """Getting JWT Token View."""
 
     permission_classes = [permissions.AllowAny, ]
@@ -113,7 +93,10 @@ class GetTokenView(CreateAPIView):
             if default_token_generator.check_token(
                 user, serializer.validated_data['confirmation_code']
             ):
-                return Response('Успешно', status.HTTP_200_OK,)
+                token = AccessToken.for_user(user)
+                return Response(
+                    {'token': str(token)}, status=status.HTTP_201_CREATED,
+                )
             return Response('Неверный код', status.HTTP_400_BAD_REQUEST,)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
 

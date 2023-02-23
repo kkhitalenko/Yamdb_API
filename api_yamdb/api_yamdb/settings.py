@@ -17,15 +17,15 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'api.apps.ApiConfig',
-    'users.apps.UsersConfig',
-    'reviews.apps.ReviewsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'api.apps',
+    'users.apps',
+    'reviews.apps',
     'rest_framework',
     'django_filters',
 ]
@@ -129,7 +129,7 @@ REST_FRAMEWORK = {
 }
 
 
-# SIMPLE JWT
+# SIMPLE JWT TOKEN
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=5),

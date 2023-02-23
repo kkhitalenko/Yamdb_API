@@ -17,23 +17,17 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-<<<<<<< HEAD
-    'api.apps.ApiConfig',
-    'users.apps.UsersConfig',
-    'reviews.apps.ReviewsConfig',
-=======
->>>>>>> cf33cd88c55eb545e64c495d4fe0aff3c0121c91
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-<<<<<<< HEAD
+    'api.apps.ApiConfig',
+    'users.apps.UsersConfig',
+    'reviews.apps.ReviewsConfig',
     'rest_framework',
     'django_filters',
-=======
->>>>>>> cf33cd88c55eb545e64c495d4fe0aff3c0121c91
 ]
 
 MIDDLEWARE = [
@@ -114,7 +108,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
-<<<<<<< HEAD
 
 
 # User model
@@ -150,5 +143,3 @@ SIMPLE_JWT = {
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 DEFAULT_EMAIL = 'Admin@yamdb.com'
-=======
->>>>>>> cf33cd88c55eb545e64c495d4fe0aff3c0121c91

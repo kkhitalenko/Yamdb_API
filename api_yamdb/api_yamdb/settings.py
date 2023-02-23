@@ -129,7 +129,7 @@ REST_FRAMEWORK = {
 }
 
 
-# SIMPLE JWT
+# SIMPLE JWT TOKEN
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=5),

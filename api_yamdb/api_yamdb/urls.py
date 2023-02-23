@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.urls import include, path
+<<<<<<< HEAD
 from django.urls import path
+=======
+>>>>>>> parent of 8963fc0 (Revert "Feature/category,genre,review")
 from django.views.generic import TemplateView
 
 urlpatterns = [

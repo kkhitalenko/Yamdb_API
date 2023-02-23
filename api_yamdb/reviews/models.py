@@ -68,6 +68,7 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+        ordering = ['-name']
 
 
 class Review(models.Model):

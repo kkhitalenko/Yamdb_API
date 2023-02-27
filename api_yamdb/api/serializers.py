@@ -1,6 +1,5 @@
 import re
 
-from django.db.models import Avg
 from django.forms import ValidationError
 
 from rest_framework import serializers
@@ -77,7 +76,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer()
     genre = GenresSerializer(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField()
 
     class Meta:
         fields = [
@@ -89,14 +88,6 @@ class TitleSerializer(serializers.ModelSerializer):
         genre_query = Genres.objects.filter(genre=obj.id)
         serializer = GenresSerializer(genre_query, many=True)
         return serializer.data
-
-    def get_rating(self, obj):
-        reviews = Review.objects.filter(title=obj)
-        if reviews.exists():
-            rating = reviews.aggregate(Avg('score'))['score__avg']
-            return int(round(rating))
-        else:
-            return None
 
 
 class TitleCreationSerializer(TitleSerializer):
@@ -113,7 +104,7 @@ class TitleCreationSerializer(TitleSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ['id', 'name', 'year', 'description', 'genre', 'category']
         model = Title
 
 

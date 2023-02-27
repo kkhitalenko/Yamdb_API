@@ -1,6 +1,5 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -64,26 +63,19 @@ class SignupView(CreateAPIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                user, _ = User.objects.get_or_create(
-                    username=serializer.validated_data['username'],
-                    email=serializer.validated_data['email']
-                )
-                confirmation_code = default_token_generator.make_token(user)
-                send_mail(
-                    subject='Код подтверждения',
-                    message=f'confirmation code: {confirmation_code}',
-                    from_email=DEFAULT_EMAIL,
-                    recipient_list=[user.email, ],
-                )
-                return Response(serializer.data)
-            except IntegrityError:
-                return Response(
-                    'Имя пользователя или email уже существует',
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
+        serializer.is_valid(raise_exception=True)
+        user, _ = User.objects.get_or_create(
+            username=serializer.validated_data['username'],
+            email=serializer.validated_data['email']
+        )
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject='Код подтверждения',
+            message=f'confirmation code: {confirmation_code}',
+            from_email=DEFAULT_EMAIL,
+            recipient_list=[user.email, ],
+        )
+        return Response(serializer.data)
 
 
 class GetTokenView(TokenObtainPairView):
@@ -93,19 +85,18 @@ class GetTokenView(TokenObtainPairView):
 
     def post(self, request):
         serializer = CheckConfCodeSerializer(data=request.data)
-        if serializer.is_valid():
-            user = get_object_or_404(
-                User, username=serializer.validated_data['username'],
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User, username=serializer.validated_data['username'],
+        )
+        if default_token_generator.check_token(
+            user, serializer.validated_data['confirmation_code'],
+        ):
+            token = AccessToken.for_user(user)
+            return Response(
+                {'token': str(token)}, status=status.HTTP_201_CREATED,
             )
-            if default_token_generator.check_token(
-                user, serializer.validated_data['confirmation_code'],
-            ):
-                token = AccessToken.for_user(user)
-                return Response(
-                    {'token': str(token)}, status=status.HTTP_201_CREATED,
-                )
-            return Response('Неверный код', status.HTTP_400_BAD_REQUEST,)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
+        return Response('Неверный код', status.HTTP_400_BAD_REQUEST,)
 
 
 class TitleViewSet(ModelViewSet):

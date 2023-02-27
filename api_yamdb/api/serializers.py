@@ -27,14 +27,26 @@ class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
 
     def validate(self, data):
-        if data['username'] == 'me':
+        USERNAME = data['username']
+        EMAIL = data['email']
+        if USERNAME == 'me':
             raise serializers.ValidationError(
                 'Регистрация пользователя с именем "me" невозможна'
             )
         reg = re.compile(r'^[\w.@+-]+')
-        if not reg.match(data['username']):
+        if not reg.match(USERNAME):
             raise serializers.ValidationError(
                 'Использованы недопустимые символы'
+            )
+        if (not User.objects.filter(username=USERNAME).exists()
+                and User.objects.filter(email=EMAIL).exists()):
+            raise serializers.ValidationError(
+                'Указанная почта уже зарегистрирована другим пользователем'
+            )
+        if (not User.objects.filter(email=EMAIL).exists()
+                and User.objects.filter(username=USERNAME).exists()):
+            raise serializers.ValidationError(
+                'Имя пользователя уже занято'
             )
         return data
 

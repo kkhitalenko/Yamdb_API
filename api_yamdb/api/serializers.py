@@ -1,6 +1,5 @@
 import re
 
-from django.db.models import Avg
 from django.forms import ValidationError
 
 from rest_framework import serializers
@@ -28,14 +27,26 @@ class SignupSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
 
     def validate(self, data):
-        if data['username'] == 'me':
+        USERNAME = data['username']
+        EMAIL = data['email']
+        if USERNAME == 'me':
             raise serializers.ValidationError(
                 'Регистрация пользователя с именем "me" невозможна'
             )
         reg = re.compile(r'^[\w.@+-]+')
-        if not reg.match(data['username']):
+        if not reg.match(USERNAME):
             raise serializers.ValidationError(
                 'Использованы недопустимые символы'
+            )
+        if (not User.objects.filter(username=USERNAME).exists()
+                and User.objects.filter(email=EMAIL).exists()):
+            raise serializers.ValidationError(
+                'Указанная почта уже зарегистрирована другим пользователем'
+            )
+        if (not User.objects.filter(email=EMAIL).exists()
+                and User.objects.filter(username=USERNAME).exists()):
+            raise serializers.ValidationError(
+                'Имя пользователя уже занято'
             )
         return data
 
@@ -77,7 +88,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer()
     genre = GenresSerializer(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.IntegerField()
 
     class Meta:
         fields = [
@@ -89,14 +100,6 @@ class TitleSerializer(serializers.ModelSerializer):
         genre_query = Genres.objects.filter(genre=obj.id)
         serializer = GenresSerializer(genre_query, many=True)
         return serializer.data
-
-    def get_rating(self, obj):
-        reviews = Review.objects.filter(title=obj)
-        if reviews.exists():
-            rating = reviews.aggregate(Avg('score'))['score__avg']
-            return int(round(rating))
-        else:
-            return None
 
 
 class TitleCreationSerializer(TitleSerializer):
@@ -113,7 +116,7 @@ class TitleCreationSerializer(TitleSerializer):
     )
 
     class Meta:
-        fields = '__all__'
+        fields = ['id', 'name', 'year', 'description', 'genre', 'category']
         model = Title
 
 

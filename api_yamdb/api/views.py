@@ -1,15 +1,15 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.db.utils import IntegrityError
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -24,6 +24,7 @@ from api.serializers import (
 from api_yamdb.settings import DEFAULT_EMAIL
 from reviews.models import Category, Genres, Review, Title
 from users.models import User
+from api.utils import CategoryGenresAbstractViewSet
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -64,26 +65,19 @@ class SignupView(CreateAPIView):
 
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                user, _ = User.objects.get_or_create(
-                    username=serializer.validated_data['username'],
-                    email=serializer.validated_data['email']
-                )
-                confirmation_code = default_token_generator.make_token(user)
-                send_mail(
-                    subject='Код подтверждения',
-                    message=f'confirmation code: {confirmation_code}',
-                    from_email=DEFAULT_EMAIL,
-                    recipient_list=[user.email, ],
-                )
-                return Response(serializer.data)
-            except IntegrityError:
-                return Response(
-                    'Имя пользователя или email уже существует',
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
+        serializer.is_valid(raise_exception=True)
+        user, _ = User.objects.get_or_create(
+            username=serializer.validated_data['username'],
+            email=serializer.validated_data['email']
+        )
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject='Код подтверждения',
+            message=f'confirmation code: {confirmation_code}',
+            from_email=DEFAULT_EMAIL,
+            recipient_list=[user.email, ],
+        )
+        return Response(serializer.data)
 
 
 class GetTokenView(TokenObtainPairView):
@@ -93,19 +87,18 @@ class GetTokenView(TokenObtainPairView):
 
     def post(self, request):
         serializer = CheckConfCodeSerializer(data=request.data)
-        if serializer.is_valid():
-            user = get_object_or_404(
-                User, username=serializer.validated_data['username'],
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User, username=serializer.validated_data['username'],
+        )
+        if default_token_generator.check_token(
+            user, serializer.validated_data['confirmation_code'],
+        ):
+            token = AccessToken.for_user(user)
+            return Response(
+                {'token': str(token)}, status=status.HTTP_201_CREATED,
             )
-            if default_token_generator.check_token(
-                user, serializer.validated_data['confirmation_code'],
-            ):
-                token = AccessToken.for_user(user)
-                return Response(
-                    {'token': str(token)}, status=status.HTTP_201_CREATED,
-                )
-            return Response('Неверный код', status.HTTP_400_BAD_REQUEST,)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
+        return Response('Неверный код', status.HTTP_400_BAD_REQUEST,)
 
 
 class TitleViewSet(ModelViewSet):
@@ -117,7 +110,9 @@ class TitleViewSet(ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def get_queryset(self):
-        queryset = Title.objects.all()
+        queryset = Title.objects.annotate(
+            rating=Avg('reviews__score')
+        ).order_by('name')
         genre = self.request.query_params.get('genre')
         if genre is not None:
             queryset = queryset.filter(genre__slug=genre)
@@ -132,23 +127,14 @@ class TitleViewSet(ModelViewSet):
         return self.serializer_class
 
 
-class CategoryViewSet(
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    mixins.ListModelMixin,
-    GenericViewSet
-):
+class CategoryViewSet(CategoryGenresAbstractViewSet):
     """Category ViewSet."""
 
     queryset = Category.objects.all().order_by('-name')
     serializer_class = CategorySerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name', 'slug')
-    lookup_field = 'slug'
-    permission_classes = [IsAdminOrReadOnly]
 
 
-class GenresViewSet(CategoryViewSet):
+class GenresViewSet(CategoryGenresAbstractViewSet):
     """Genres ViewSet."""
 
     queryset = Genres.objects.all().order_by('-name')

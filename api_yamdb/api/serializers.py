@@ -103,9 +103,6 @@ class TitleCreationSerializer(TitleSerializer):
         many=True
     )
 
-    # class Meta:
-    #     fields = '__all__'
-    #     model = Title
     class Meta:
         fields = ['id', 'name', 'year', 'description', 'genre', 'category']
         model = Title

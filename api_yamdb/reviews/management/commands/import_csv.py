@@ -3,7 +3,8 @@ import csv
 from .serializers_for_import import (
     CategoryCmdSerializer, GenresCmdSerializer,
     GenreTitleCmdSerializer, TitleCmdSerializer,
-    UserCmdSerializer
+    UserCmdSerializer, ReviewCmdSerializer,
+    CommentCmdSerializer
 )
 
 
@@ -12,7 +13,9 @@ CSV_SERIALIZER_LIST = (
     ('static/data/genre.csv', GenresCmdSerializer),
     ('static/data/titles.csv', TitleCmdSerializer),
     ('static/data/genre_title.csv', GenreTitleCmdSerializer),
-    ('static/data/users.csv', UserCmdSerializer)
+    ('static/data/users.csv', UserCmdSerializer),
+    ('static/data/review.csv', ReviewCmdSerializer),
+    ('static/data/comments.csv', CommentCmdSerializer),
 )
 
 
@@ -29,6 +32,11 @@ class Command(BaseCommand):
                         serializer = serializer_type(data=row_dict)
                         if serializer.is_valid():
                             serializer.save()
+                        else:
+                            self.stdout.write(self.style.SUCCESS(
+                                f'Ошибка в файле {filepath} \n'
+                                f'{serializer.errors}'
+                            ))
 
                     self.stdout.write(self.style.SUCCESS(
                         f'Файл {filepath} успешно загружен в базу'

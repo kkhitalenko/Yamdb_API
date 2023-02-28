@@ -6,9 +6,9 @@ MODERATOR = 'moderator'
 ADMIN = 'admin'
 
 ROLES = (
-    ('user', USER),
-    ('moderator', MODERATOR),
-    ('admin', ADMIN),
+    (USER, 'Пользователь'),
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Администратор'),
 )
 
 

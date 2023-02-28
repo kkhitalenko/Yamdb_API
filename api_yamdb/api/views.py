@@ -5,10 +5,10 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -38,24 +38,21 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     http_method_names = ('get', 'post', 'patch', 'delete',)
 
-
-class UserPersonalPageView(APIView):
-    """User Personal Page View."""
-
-    permission_classes = [permissions.IsAuthenticated, ]
-
-    def get(self, request):
-        user = get_object_or_404(User, username=request.user.username,)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
-
-    def patch(self, request):
-        user = User.objects.get(username=request.user.username)
-        serializer = UserSerializer(user, data=request.data, partial=True,)
-        if serializer.is_valid():
+    @action(
+        methods=['GET', 'PATCH'],
+        detail=False,
+        permission_classes=[permissions.IsAuthenticated, ],
+        url_path='me')
+    def user_personal_page(self, request):
+        if request.method == 'PATCH':
+            user = User.objects.get(username=request.user.username)
+            serializer = UserSerializer(user, data=request.data, partial=True,)
+            serializer.is_valid(raise_exception=True)
             serializer.save(role=request.user.role)
             return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST,)
+        user = get_object_or_404(User, username=request.user.username)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
 
 
 class SignupView(CreateAPIView):
